@@ -1,16 +1,560 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Supabase Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For You 💙</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', cursive;
+    }
+
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 0;
+    }
+
+    /* Loading / 404 overlay */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    #loadingOverlay p {
+      color: #2d2dff;
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 1.2rem;
+      opacity: 0.7;
+    }
+
+    /* Valentine button (original) */
+    #valentinesButton {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: transparent;
+      border: 2px solid #2d2dff;
+      color: #2d2dff;
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 1rem;
+      padding: 10px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #2d2dff88;
+      transition: all 0.3s;
+    }
+    #valentinesButton:hover {
+      background: #2d2dff22;
+      box-shadow: 0 0 24px #2d2dffcc;
+    }
+
+    /* ── PROPOSAL OVERLAY ── */
+    #proposalOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 28px;
+      background: radial-gradient(ellipse at center, #00001a 0%, #000 80%);
+      animation: fadeInOverlay 1.5s ease forwards;
+    }
+    #proposalOverlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .proposal-hearts {
+      font-size: 2.5rem;
+      animation: float 3s ease-in-out infinite;
+      text-shadow: 0 0 20px #2d2dffaa;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
+    }
+
+    .proposal-question {
+      font-family: 'Comic Sans MS', cursive;
+      font-size: clamp(1.4rem, 4vw, 2.4rem);
+      color: #fff;
+      text-align: center;
+      padding: 0 20px;
+      text-shadow: 0 0 16px #2d2dff, 0 0 40px #2d2dff88;
+      line-height: 1.5;
+      animation: pulseText 2.5s ease-in-out infinite;
+    }
+    @keyframes pulseText {
+      0%,100% { text-shadow: 0 0 16px #2d2dff, 0 0 40px #2d2dff88; }
+      50%      { text-shadow: 0 0 30px #2d2dff, 0 0 70px #2d2dffcc; }
+    }
+
+    .proposal-buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .proposal-btn {
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 1.1rem;
+      padding: 14px 40px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-yes {
+      background: linear-gradient(135deg, #2d2dff, #6666ff);
+      color: #fff;
+      box-shadow: 0 0 20px #2d2dff88, 0 4px 15px #2d2dff44;
+    }
+    .btn-yes:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 40px #2d2dffcc, 0 6px 25px #2d2dff66;
+    }
+    .btn-yes:active { transform: scale(0.96); }
+
+    .btn-no {
+      background: transparent;
+      color: #aaa;
+      border: 1.5px solid #444;
+    }
+    .btn-no:hover {
+      border-color: #888;
+      color: #ccc;
+      background: #ffffff08;
+    }
+
+    /* ── RESPONSE SCREENS ── */
+    #responseScreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: #000;
+    }
+    #responseScreen.active { display: flex; }
+
+    .response-emoji {
+      font-size: 5rem;
+      animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .response-msg {
+      font-family: 'Comic Sans MS', cursive;
+      font-size: clamp(1.2rem, 3.5vw, 2rem);
+      text-align: center;
+      padding: 0 24px;
+      line-height: 1.6;
+    }
+    .response-msg.yes-msg {
+      color: #fff;
+      text-shadow: 0 0 20px #2d2dff, 0 0 50px #2d2dff88;
+    }
+    .response-msg.no-msg {
+      color: #888;
+    }
+
+    /* Floating hearts for yes */
+    .heart-burst {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 55;
+    }
+    .heart-particle {
+      position: absolute;
+      font-size: 1.5rem;
+      animation: riseUp 3s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes riseUp {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-80vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Saving indicator */
+    #savingIndicator {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 0.75rem;
+      color: #2d2dff88;
+      z-index: 70;
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
+<!-- Loading overlay -->
+<div id="loadingOverlay"><p>✨ loading something special...</p></div>
 
+<!-- Stars canvas -->
+<canvas id="starfield"></canvas>
 
-<script type="module" src="./index.js"></script>
+<!-- Original valentine button -->
+<button id="valentinesButton"> ❤❤❤</button>
+
+<!-- Proposal overlay -->
+<div id="proposalOverlay">
+  <div class="proposal-hearts">💙 ✨ 💙</div>
+  <div class="proposal-question">
+    So... after all of time and space conspiring<br>to bring us together...
+    <br><br>
+    Will you be mine? 💙
+  </div>
+  <div class="proposal-buttons">
+    <button class="proposal-btn btn-yes" id="btnYes">Yes, absolutely! 💙</button>
+    <button class="proposal-btn btn-no"  id="btnNo">No...</button>
+  </div>
+</div>
+
+<!-- Response screen -->
+<div id="responseScreen">
+  <div class="heart-burst" id="heartBurst"></div>
+  <div class="response-emoji" id="responseEmoji"></div>
+  <div class="response-msg"  id="responseMsg"></div>
+</div>
+
+<div id="savingIndicator">saving your answer... 💾</div>
+
+<!-- ── SCRIPTS ── -->
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabaseUrl     = "https://kdyslerhrrjxidvkbutu.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkeXNsZXJocnJqeGlkdmtidXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDgyNzMsImV4cCI6MjA4OTA4NDI3M30.CZzZVgYNwoyMCw9jpKJKQr-EJN0ay3EtwNhx1vJBqao";
+const supabase        = createClient(supabaseUrl, supabaseAnonKey);
+
+/* ─── ONE-TIME VIEW GATE ─── */
+window.onload = async function () {
+  try {
+    const { data, error } = await supabase.from("message").select("*");
+    if (error) throw error;
+
+    const row  = data[0];
+    const view = row.viewed;
+
+    if (view === true) {
+      window.location.href = "/404.html";
+      return;
+    }
+
+    // Mark as viewed
+    await supabase.from("message").update({ viewed: true }).eq("id", 1);
+
+    // Hide loading, start the animation
+    document.getElementById("loadingOverlay").style.display = "none";
+    startAnimation();
+
+    // Auto redirect after 10 min just in case
+    setTimeout(() => { window.location.href = "/404.html"; }, 600000);
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("loadingOverlay").innerHTML =
+      "<p style='color:#ff4444'>Something went wrong 😞</p>";
+  }
+};
+
+/* ─── SAVE RESPONSE TO SUPABASE ─── */
+async function saveResponse(answer) {
+  const indicator = document.getElementById("savingIndicator");
+  indicator.style.display = "block";
+  try {
+    await supabase.from("message").insert([{
+      viewed: false,
+      response: answer,          // "yes" or "no"
+      responded_at: new Date().toISOString()
+    }]);
+  } catch (err) {
+    console.error("Could not save response:", err);
+  } finally {
+    indicator.style.display = "none";
+  }
+}
+
+/* ─── PROPOSAL BUTTONS ─── */
+document.getElementById("btnYes").addEventListener("click", async () => {
+  document.getElementById("proposalOverlay").classList.remove("active");
+
+  // Burst hearts
+  const burst = document.getElementById("heartBurst");
+  const emojis = ["💙","✨","💫","🌟","💙","💙"];
+  for (let i = 0; i < 30; i++) {
+    const h = document.createElement("span");
+    h.className = "heart-particle";
+    h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.bottom = "0";
+    h.style.animationDelay = Math.random() * 1.5 + "s";
+    h.style.fontSize = (1 + Math.random() * 1.5) + "rem";
+    burst.appendChild(h);
+  }
+
+  document.getElementById("responseEmoji").textContent = "💙";
+  document.getElementById("responseMsg").textContent =
+    "I knew it. You just made me the luckiest person\nin the entire universe. 💙✨";
+  document.getElementById("responseMsg").className = "response-msg yes-msg";
+  document.getElementById("responseScreen").classList.add("active");
+
+  await saveResponse("yes");
+});
+
+document.getElementById("btnNo").addEventListener("click", async () => {
+  document.getElementById("proposalOverlay").classList.remove("active");
+  document.getElementById("responseEmoji").textContent = "🌌";
+  document.getElementById("responseMsg").textContent =
+    "That's okay... the stars still think you're pretty cool. 💙";
+  document.getElementById("responseMsg").className = "response-msg no-msg";
+  document.getElementById("responseScreen").classList.add("active");
+
+  await saveResponse("no");
+});
+
+/* ─── STARFIELD + TEXT ANIMATION ─── */
+function startAnimation() {
+  const canvas  = document.getElementById("starfield");
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const context    = canvas.getContext("2d");
+  const stars      = 500;
+  const colorrange = [0, 60, 240];
+  const starArray  = [];
+
+  function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  for (let i = 0; i < stars; i++) {
+    starArray.push({
+      x:       Math.random() * canvas.offsetWidth,
+      y:       Math.random() * canvas.offsetHeight,
+      radius:  Math.random() * 1.2,
+      hue:     colorrange[getRandom(0, colorrange.length - 1)],
+      sat:     getRandom(50, 100),
+      opacity: Math.random()
+    });
+  }
+
+  let frameNumber   = 0;
+  let opacity       = 0;
+  let secondOpacity = 0;
+  let thirdOpacity  = 0;
+
+  let baseFrame = context.getImageData(0, 0, window.innerWidth, window.innerHeight);
+
+  const button = document.getElementById("valentinesButton");
+
+  button.addEventListener("click", () => {
+    if (button.textContent === "Click Me! ❤") {
+      button.textContent = "loading...";
+      fetch("send_mail.php")
+        .then(r => {
+          button.textContent = r.ok ? "Check Your Email 🙃" : "Error 😞";
+        })
+        .catch(() => { button.textContent = "Error 😞"; });
+    }
+  });
+
+  function drawStars() {
+    for (let i = 0; i < stars; i++) {
+      const s = starArray[i];
+      context.beginPath();
+      context.arc(s.x, s.y, s.radius, 0, 360);
+      context.fillStyle = `hsla(${s.hue}, ${s.sat}%, 88%, ${s.opacity})`;
+      context.fill();
+    }
+  }
+
+  function updateStars() {
+    for (let i = 0; i < stars; i++) {
+      if (Math.random() > 0.99) starArray[i].opacity = Math.random();
+    }
+  }
+
+  function drawTextWithLineBreaks(lines, x, y, fontSize, lineHeight) {
+    lines.forEach((line, idx) => {
+      context.fillText(line, x, y + idx * (fontSize + lineHeight));
+    });
+  }
+
+  function drawText() {
+    const fontSize   = Math.min(30, window.innerWidth / 24);
+    const lineHeight = 8;
+
+    context.font      = fontSize + "px Comic Sans MS";
+    context.textAlign = "center";
+
+    context.shadowColor   = "rgba(45, 45, 255, 1)";
+    context.shadowBlur    = 8;
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
+
+    const w  = canvas.width;
+    const cy = canvas.height / 2;
+    const mobile = window.innerWidth < 600;
+
+    // --- sentence 1 ---
+    if (frameNumber < 250) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      context.fillText("everyday day I cannot believe how lucky I am", w/2, cy);
+      opacity += 0.01;
+    }
+    if (frameNumber >= 250 && frameNumber < 500) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      context.fillText("everyday day I cannot believe how lucky I am", w/2, cy);
+      opacity -= 0.01;
+    }
+    if (frameNumber === 500) opacity = 0;
+
+    // --- sentence 2 ---
+    if (frameNumber > 500 && frameNumber < 750) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      mobile
+        ? drawTextWithLineBreaks(["amongst trillions and trillions of stars,","over billions of years"], w/2, cy, fontSize, lineHeight)
+        : context.fillText("amongst trillions and trillions of stars, over billions of years", w/2, cy);
+      opacity += 0.01;
+    }
+    if (frameNumber >= 750 && frameNumber < 1000) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      mobile
+        ? drawTextWithLineBreaks(["amongst trillions and trillions of stars,","over billions of years"], w/2, cy, fontSize, lineHeight)
+        : context.fillText("amongst trillions and trillions of stars, over billions of years", w/2, cy);
+      opacity -= 0.01;
+    }
+    if (frameNumber === 1000) opacity = 0;
+
+    // --- sentence 3 ---
+    if (frameNumber > 1000 && frameNumber < 1250) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      context.fillText("to be alive, and to get to spend this life with you", w/2, cy);
+      opacity += 0.01;
+    }
+    if (frameNumber >= 1250 && frameNumber < 1500) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      context.fillText("to be alive, and to get to spend this life with you", w/2, cy);
+      opacity -= 0.01;
+    }
+    if (frameNumber === 1500) opacity = 0;
+
+    // --- sentence 4 ---
+    if (frameNumber > 1500 && frameNumber < 1750) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      context.fillText("is so incredibly, unfathomably unlikely", w/2, cy);
+      opacity += 0.01;
+    }
+    if (frameNumber >= 1750 && frameNumber < 2000) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      context.fillText("is so incredibly, unfathomably unlikely", w/2, cy);
+      opacity -= 0.01;
+    }
+    if (frameNumber === 2000) opacity = 0;
+
+    // --- sentence 5 ---
+    if (frameNumber > 2000 && frameNumber < 2250) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      mobile
+        ? drawTextWithLineBreaks(["and yet here I am to get the impossible","chance to get to know you"], w/2, cy, fontSize, lineHeight)
+        : context.fillText("and yet here I am to get the impossible chance to get to know you", w/2, cy);
+      opacity += 0.01;
+    }
+    if (frameNumber >= 2250 && frameNumber < 2500) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      mobile
+        ? drawTextWithLineBreaks(["and yet here I am to get the impossible","chance to get to know you"], w/2, cy, fontSize, lineHeight)
+        : context.fillText("and yet here I am to get the impossible chance to get to know you", w/2, cy);
+      opacity -= 0.01;
+    }
+    if (frameNumber === 2500) opacity = 0;
+
+    // --- final lines ---
+    if (frameNumber > 2500) {
+      context.fillStyle = `rgba(45,45,255,${opacity})`;
+      mobile
+        ? drawTextWithLineBreaks(["I love you so much, more than","all the time and space in the universe can contain"], w/2, cy, fontSize, lineHeight)
+        : context.fillText("I love you so much, more than all the time and space in the universe can contain", w/2, cy);
+      if (opacity < 1) opacity += 0.01;
+    }
+    if (frameNumber >= 2750) {
+      context.fillStyle = `rgba(45,45,255,${secondOpacity})`;
+      mobile
+        ? drawTextWithLineBreaks(["and I can't wait to spend all the time in","the world to share that love with you!"], w/2, cy+60, fontSize, lineHeight)
+        : context.fillText("and I can't wait to spend all the time in the world to share that love with you!", w/2, cy+50);
+      if (secondOpacity < 1) secondOpacity += 0.01;
+    }
+    if (frameNumber >= 3000) {
+      context.fillStyle = `rgba(45,45,255,${thirdOpacity})`;
+      context.fillText("I Love You <3", w/2, cy+120);
+      if (thirdOpacity < 1) thirdOpacity += 0.01;
+
+      button.style.display = "block";
+    }
+
+    // --- show proposal after last text is fully visible ---
+    if (frameNumber >= 3250 && thirdOpacity >= 0.99) {
+      button.style.display = "none";   // hide the old button
+      document.getElementById("proposalOverlay").classList.add("active");
+    }
+
+    context.shadowColor   = "transparent";
+    context.shadowBlur    = 0;
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
+  }
+
+  function draw() {
+    context.putImageData(baseFrame, 0, 0);
+    drawStars();
+    updateStars();
+    drawText();
+    if (frameNumber < 99999) frameNumber++;
+    window.requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    baseFrame = context.getImageData(0, 0, window.innerWidth, window.innerHeight);
+  });
+
+  window.requestAnimationFrame(draw);
+}
+</script>
 </body>
 </html>
-
-
-
