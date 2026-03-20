@@ -1,258 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>For You 💙</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      background: #000;
-      overflow: hidden;
-      font-family: 'Comic Sans MS', cursive;
-    }
+      body {
+        background: #000;
+        overflow: hidden;
+        font-family: "Comic Sans MS", cursive;
+      }
 
-    canvas {
-      display: block;
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 0;
-    }
+      canvas {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 0;
+      }
 
-    /* Loading / 404 overlay */
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-    #loadingOverlay p {
-      color: #2d2dff;
-      font-family: 'Comic Sans MS', cursive;
-      font-size: 1.2rem;
-      opacity: 0.7;
-    }
+      /* Loading / 404 overlay */
+      #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      #loadingOverlay p {
+        color: #2d2dff;
+        font-family: "Comic Sans MS", cursive;
+        font-size: 1.2rem;
+        opacity: 0.7;
+      }
 
-    /* Valentine button (original) */
-    #valentinesButton {
-      display: none;
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      background: transparent;
-      border: 2px solid #2d2dff;
-      color: #2d2dff;
-      font-family: 'Comic Sans MS', cursive;
-      font-size: 1rem;
-      padding: 10px 24px;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 0 12px #2d2dff88;
-      transition: all 0.3s;
-    }
-    #valentinesButton:hover {
-      background: #2d2dff22;
-      box-shadow: 0 0 24px #2d2dffcc;
-    }
+      /* Valentine button (original) */
+      #valentinesButton {
+        display: none;
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        background: transparent;
+        border: 2px solid #2d2dff;
+        color: #2d2dff;
+        font-family: "Comic Sans MS", cursive;
+        font-size: 1rem;
+        padding: 10px 24px;
+        border-radius: 30px;
+        cursor: pointer;
+        box-shadow: 0 0 12px #2d2dff88;
+        transition: all 0.3s;
+      }
+      #valentinesButton:hover {
+        background: #2d2dff22;
+        box-shadow: 0 0 24px #2d2dffcc;
+      }
 
-    /* ── PROPOSAL OVERLAY ── */
-    #proposalOverlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 28px;
-      background: radial-gradient(ellipse at center, #00001a 0%, #000 80%);
-      animation: fadeInOverlay 1.5s ease forwards;
-    }
-    #proposalOverlay.active {
-      display: flex;
-    }
+      /* ── PROPOSAL OVERLAY ── */
+      #proposalOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 28px;
+        background: radial-gradient(ellipse at center, #00001a 0%, #000 80%);
+        animation: fadeInOverlay 1.5s ease forwards;
+      }
+      #proposalOverlay.active {
+        display: flex;
+      }
 
-    @keyframes fadeInOverlay {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
+      @keyframes fadeInOverlay {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
 
-    .proposal-hearts {
-      font-size: 2.5rem;
-      animation: float 3s ease-in-out infinite;
-      text-shadow: 0 0 20px #2d2dffaa;
-    }
-    @keyframes float {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-12px); }
-    }
+      .proposal-hearts {
+        font-size: 2.5rem;
+        animation: float 3s ease-in-out infinite;
+        text-shadow: 0 0 20px #2d2dffaa;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-12px);
+        }
+      }
 
-    .proposal-question {
-      font-family: 'Comic Sans MS', cursive;
-      font-size: clamp(1.4rem, 4vw, 2.4rem);
-      color: #fff;
-      text-align: center;
-      padding: 0 20px;
-      text-shadow: 0 0 16px #2d2dff, 0 0 40px #2d2dff88;
-      line-height: 1.5;
-      animation: pulseText 2.5s ease-in-out infinite;
-    }
-    @keyframes pulseText {
-      0%,100% { text-shadow: 0 0 16px #2d2dff, 0 0 40px #2d2dff88; }
-      50%      { text-shadow: 0 0 30px #2d2dff, 0 0 70px #2d2dffcc; }
-    }
+      .proposal-question {
+        font-family: "Comic Sans MS", cursive;
+        font-size: clamp(1.4rem, 4vw, 2.4rem);
+        color: #fff;
+        text-align: center;
+        padding: 0 20px;
+        text-shadow:
+          0 0 16px #2d2dff,
+          0 0 40px #2d2dff88;
+        line-height: 1.5;
+        animation: pulseText 2.5s ease-in-out infinite;
+      }
+      @keyframes pulseText {
+        0%,
+        100% {
+          text-shadow:
+            0 0 16px #2d2dff,
+            0 0 40px #2d2dff88;
+        }
+        50% {
+          text-shadow:
+            0 0 30px #2d2dff,
+            0 0 70px #2d2dffcc;
+        }
+      }
 
-    .proposal-buttons {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+      .proposal-buttons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
 
-    .proposal-btn {
-      font-family: 'Comic Sans MS', cursive;
-      font-size: 1.1rem;
-      padding: 14px 40px;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+      .proposal-btn {
+        font-family: "Comic Sans MS", cursive;
+        font-size: 1.1rem;
+        padding: 14px 40px;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
 
-    .btn-yes {
-      background: linear-gradient(135deg, #2d2dff, #6666ff);
-      color: #fff;
-      box-shadow: 0 0 20px #2d2dff88, 0 4px 15px #2d2dff44;
-    }
-    .btn-yes:hover {
-      transform: scale(1.08);
-      box-shadow: 0 0 40px #2d2dffcc, 0 6px 25px #2d2dff66;
-    }
-    .btn-yes:active { transform: scale(0.96); }
+      .btn-yes {
+        background: linear-gradient(135deg, #2d2dff, #6666ff);
+        color: #fff;
+        box-shadow:
+          0 0 20px #2d2dff88,
+          0 4px 15px #2d2dff44;
+      }
+      .btn-yes:hover {
+        transform: scale(1.08);
+        box-shadow:
+          0 0 40px #2d2dffcc,
+          0 6px 25px #2d2dff66;
+      }
+      .btn-yes:active {
+        transform: scale(0.96);
+      }
 
-    .btn-no {
-      background: transparent;
-      color: #aaa;
-      border: 1.5px solid #444;
-    }
-    .btn-no:hover {
-      border-color: #888;
-      color: #ccc;
-      background: #ffffff08;
-    }
+      .btn-no {
+        background: transparent;
+        color: #aaa;
+        border: 1.5px solid #444;
+      }
+      .btn-no:hover {
+        border-color: #888;
+        color: #ccc;
+        background: #ffffff08;
+      }
 
-    /* ── RESPONSE SCREENS ── */
-    #responseScreen {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 60;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      background: #000;
-    }
-    #responseScreen.active { display: flex; }
+      /* ── RESPONSE SCREENS ── */
+      #responseScreen {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: #000;
+      }
+      #responseScreen.active {
+        display: flex;
+      }
 
-    .response-emoji {
-      font-size: 5rem;
-      animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    @keyframes popIn {
-      from { transform: scale(0); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
-    }
+      .response-emoji {
+        font-size: 5rem;
+        animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
 
-    .response-msg {
-      font-family: 'Comic Sans MS', cursive;
-      font-size: clamp(1.2rem, 3.5vw, 2rem);
-      text-align: center;
-      padding: 0 24px;
-      line-height: 1.6;
-    }
-    .response-msg.yes-msg {
-      color: #fff;
-      text-shadow: 0 0 20px #2d2dff, 0 0 50px #2d2dff88;
-    }
-    .response-msg.no-msg {
-      color: #888;
-    }
+      .response-msg {
+        font-family: "Comic Sans MS", cursive;
+        font-size: clamp(1.2rem, 3.5vw, 2rem);
+        text-align: center;
+        padding: 0 24px;
+        line-height: 1.6;
+      }
+      .response-msg.yes-msg {
+        color: #fff;
+        text-shadow:
+          0 0 20px #2d2dff,
+          0 0 50px #2d2dff88;
+      }
+      .response-msg.no-msg {
+        color: #888;
+      }
 
-    /* Floating hearts for yes */
-    .heart-burst {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 55;
-    }
-    .heart-particle {
-      position: absolute;
-      font-size: 1.5rem;
-      animation: riseUp 3s ease-out forwards;
-      opacity: 0;
-    }
-    @keyframes riseUp {
-      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(-80vh) rotate(360deg); opacity: 0; }
-    }
+      /* Floating hearts for yes */
+      .heart-burst {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 55;
+      }
+      .heart-particle {
+        position: absolute;
+        font-size: 1.5rem;
+        animation: riseUp 3s ease-out forwards;
+        opacity: 0;
+      }
+      @keyframes riseUp {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-80vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
 
-    /* Saving indicator */
-    #savingIndicator {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      font-family: 'Comic Sans MS', cursive;
-      font-size: 0.75rem;
-      color: #2d2dff88;
-      z-index: 70;
-      display: none;
-    }
-  </style>
-</head>
-<body>
+      /* Saving indicator */
+      #savingIndicator {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        font-family: "Comic Sans MS", cursive;
+        font-size: 0.75rem;
+        color: #2d2dff88;
+        z-index: 70;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay"><p>✨ loading something special...</p></div>
 
-<!-- Loading overlay -->
-<div id="loadingOverlay"><p>✨ loading something special...</p></div>
+    <!-- Stars canvas -->
+    <canvas id="starfield"></canvas>
 
-<!-- Stars canvas -->
-<canvas id="starfield"></canvas>
+    <!-- Original valentine button -->
+    <button id="valentinesButton">❤❤❤</button>
 
-<!-- Original valentine button -->
-<button id="valentinesButton"> ❤❤❤</button>
+    <!-- Proposal overlay -->
+    <div id="proposalOverlay">
+      <div class="proposal-hearts">💙 ✨ 💙</div>
+      <div class="proposal-question">
+        So... after all of time and space conspiring<br />to bring us
+        together... <br /><br />
+        Will you be mine? 💙
+      </div>
+      <div class="proposal-buttons">
+        <button class="proposal-btn btn-yes" id="btnYes">
+          Yes, absolutely! 💙
+        </button>
+        <button class="proposal-btn btn-no" id="btnNo">No...</button>
+      </div>
+    </div>
 
-<!-- Proposal overlay -->
-<div id="proposalOverlay">
-  <div class="proposal-hearts">💙 ✨ 💙</div>
-  <div class="proposal-question">
-    So... after all of time and space conspiring<br>to bring us together...
-    <br><br>
-    Will you be mine? 💙
-  </div>
-  <div class="proposal-buttons">
-    <button class="proposal-btn btn-yes" id="btnYes">Yes, absolutely! 💙</button>
-    <button class="proposal-btn btn-no"  id="btnNo">No...</button>
-  </div>
-</div>
+    <!-- Response screen -->
+    <div id="responseScreen">
+      <div class="heart-burst" id="heartBurst"></div>
+      <div class="response-emoji" id="responseEmoji"></div>
+      <div class="response-msg" id="responseMsg"></div>
+    </div>
 
-<!-- Response screen -->
-<div id="responseScreen">
-  <div class="heart-burst" id="heartBurst"></div>
-  <div class="response-emoji" id="responseEmoji"></div>
-  <div class="response-msg"  id="responseMsg"></div>
-</div>
+    <div id="savingIndicator">saving your answer... 💾</div>
 
-<div id="savingIndicator">saving your answer... 💾</div>
-
-<!-- ── SCRIPTS ── -->
-<script type="module" src="index.js"></script>
-</body>
+    <!-- ── SCRIPTS ── -->
+    <script type="module" src="index.js"></script>
+  </body>
 </html>
